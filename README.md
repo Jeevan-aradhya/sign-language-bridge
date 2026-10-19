@@ -1,4 +1,5 @@
-# SignBridge – Real-time Sign Language to Text and Speech
+ HEAD
+ # SignBridge – Real-time Sign Language to Text and Speech
 
 A browser app that recognises American Sign Language (ASL) fingerspelling from your webcam and turns it into text and speech. Everything runs on your device: no server, no video upload.
 
@@ -64,3 +65,6 @@ The camera only works on `https://` or `localhost`.
 ## Licence
 
 MIT. Word frequency data derived from `popular-english-words` (ISC).
+
+# sign-language-bridge
+ 2c270b0c0eaa9c63f2af188dcdae6549ea9e7e3e
