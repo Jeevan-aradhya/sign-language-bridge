@@ -1,0 +1,12 @@
+{
+  "name": "signbridge",
+  "version": "1.0.0",
+  "description": "Real-time ASL fingerspelling to text and speech, in the browser",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

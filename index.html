@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SignBridge – sign language to text and speech</title>
+  <meta name="description" content="Real-time American Sign Language fingerspelling recognition that runs in your browser. Show a letter to the camera and get text and speech.">
+  <meta name="theme-color" content="#0a6c85">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a6c85'/%3E%3Cpath d='M9 22V14m4 8V10m4 12V9m4 13v-9m-12 9c0 3 3 5 7 5s6-2 6-5' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#translate">Skip to translator</a>
+
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="currentColor"/>
+        <path d="M9 22V14m4 8V10m4 12V9m4 13v-9m-12 9c0 3 3 5 7 5s6-2 6-5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>SignBridge</h1>
+        <p>American Sign Language fingerspelling to text and speech, running in your browser.</p>
+      </div>
+    </div>
+    <a class="repo" id="repoLink" href="https://github.com/" hidden>View source on GitHub</a>
+  </header>
+
+  <main id="translate">
+    <section class="workspace" aria-label="Translator">
+      <div class="left">
+      <div class="stage" id="stage">
+        <div class="viewport">
+          <video id="video" playsinline muted></video>
+          <canvas id="overlay"></canvas>
+        </div>
+
+        <div class="cta" id="cta">
+          <h2>Spell a word with your hand</h2>
+          <p>Hold each letter steady for about a second. Open your hand with fingers spread to add a space.</p>
+          <button class="btn primary" id="startBtn" type="button">Start camera</button>
+          <p class="status" id="status" role="status"></p>
+        </div>
+
+        <div class="stage-bar" id="stageBar" hidden>
+          <span class="chip" id="srcChip">rules</span>
+          <span class="chip" id="fps">– fps</span>
+          <button class="btn quiet" id="stopBtn" type="button">Stop camera</button>
+        </div>
+      </div>
+      <ul class="tips" aria-label="Tips for better results">
+        <li>Face a window or lamp so your hand is well lit.</li>
+        <li>Use a plain background and keep only one hand in view.</li>
+        <li>Show your palm to the camera, about an arm's length away.</li>
+        <li>Lower your hand briefly between two identical letters.</li>
+      </ul>
+      </div>
+
+      <div class="side">
+        <div class="readout">
+          <div class="ring" id="ring">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="track" cx="60" cy="60" r="52"/>
+              <circle class="prog" id="ringProg" cx="60" cy="60" r="52"/>
+            </svg>
+            <span class="letter" id="letter" aria-live="polite" aria-atomic="true">–</span>
+          </div>
+          <div class="trace">
+            <canvas id="trace" width="240" height="240" aria-label="Detected hand skeleton"></canvas>
+          </div>
+        </div>
+
+        <p class="hint" id="hint">Camera is off.</p>
+
+        <div class="sentence-block">
+          <div class="sentence-head">
+            <h2>Sentence</h2>
+            <span class="word-now" id="wordNow"></span>
+          </div>
+          <p class="sentence" id="sentence" aria-live="polite"></p>
+        </div>
+
+        <div class="suggest" id="suggest" role="group" aria-label="Word suggestions"></div>
+
+        <div class="actions">
+          <button class="btn primary" id="speakBtn" type="button">Speak</button>
+          <button class="btn" id="backBtn" type="button">Delete letter</button>
+          <button class="btn" id="clearBtn" type="button">Clear</button>
+        </div>
+
+        <details class="settings">
+          <summary>Settings</summary>
+          <div class="setting">
+            <label for="holdMs">Hold time <output id="holdOut">0.9 s</output></label>
+            <input id="holdMs" type="range" min="500" max="1800" step="100" value="900">
+          </div>
+          <label class="check"><input type="checkbox" id="autoWord" checked> Speak each word when I add a space</label>
+          <label class="check"><input type="checkbox" id="autoLetter"> Speak each letter as it is added</label>
+          <label class="check"><input type="checkbox" id="rulesOnly"> Ignore my trained samples (rules only)</label>
+          <div class="setting">
+            <label for="voice">Voice</label>
+            <select id="voice"></select>
+          </div>
+          <div class="setting">
+            <label for="rate">Speech speed <output id="rateOut">1.0×</output></label>
+            <input id="rate" type="range" min="0.6" max="1.4" step="0.1" value="1">
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="learn" aria-label="Guide and training">
+      <div class="tabs" role="tablist" aria-label="More">
+        <button role="tab" id="tab-guide" aria-controls="panel-guide" aria-selected="true">Alphabet guide</button>
+        <button role="tab" id="tab-train" aria-controls="panel-train" aria-selected="false" tabindex="-1">Calibrate</button>
+        <button role="tab" id="tab-how" aria-controls="panel-how" aria-selected="false" tabindex="-1">How it works</button>
+      </div>
+
+      <div id="panel-guide" role="tabpanel" aria-labelledby="tab-guide">
+        <p class="lede">Hand shapes the app looks for. Show the palm to the camera, fingers up unless noted. J and Z are drawn in the air.</p>
+        <dl class="guide" id="guideList"></dl>
+      </div>
+
+      <div id="panel-train" role="tabpanel" aria-labelledby="tab-train" hidden>
+        <p class="lede">The built-in rules work for clear shapes, but every hand and camera is different. Record a few seconds of each letter and the app learns your hand. Samples stay in this browser unless you export them.</p>
+        <div class="train-grid" id="chips" role="group" aria-label="Letters to record"></div>
+        <div class="train-controls">
+          <button class="btn primary" id="recBtn" type="button" disabled>Pick a letter first</button>
+          <button class="btn" id="delLetterBtn" type="button" disabled>Delete samples for this letter</button>
+        </div>
+        <p class="status" id="trainStatus" role="status"></p>
+        <div class="train-io">
+          <button class="btn" id="exportBtn" type="button">Export samples</button>
+          <label class="btn" for="importFile">Import samples</label>
+          <input id="importFile" type="file" accept="application/json" hidden>
+          <button class="btn quiet" id="wipeBtn" type="button">Delete all samples</button>
+        </div>
+        <p class="note">Tip for the project owner: export your samples, save the file as <code>data/samples.json</code> in the repository and push. Everyone who opens the site then gets your calibration by default.</p>
+      </div>
+
+      <div id="panel-how" role="tabpanel" aria-labelledby="tab-how" hidden>
+        <ol class="pipeline">
+          <li><strong>Capture.</strong> The browser camera streams video frames; nothing is uploaded.</li>
+          <li><strong>Hand detection.</strong> A MediaPipe hand model finds 21 landmarks per frame, in the image and in 3D.</li>
+          <li><strong>Features.</strong> Finger curl, thumb position, finger spread and hand direction are measured from the landmarks and scaled by palm size.</li>
+          <li><strong>Classification.</strong> Geometric rules pick the letter. If you calibrated, a nearest-neighbour model over your recorded samples takes over when it is confident.</li>
+          <li><strong>Stabilising.</strong> A vote over recent frames plus a hold timer turns noisy detections into deliberate key presses.</li>
+          <li><strong>Word building.</strong> Letters form words; an open hand adds a space; suggestions complete words from a dictionary.</li>
+          <li><strong>Output.</strong> The sentence is shown as text and read aloud with the browser's text-to-speech.</li>
+        </ol>
+        <p class="note">Based on the project seminar "Real-Time Sign Language Detection using Deep Convolutional Neural Networks" (KVG College of Engineering). The seminar model was a CNN over camera frames; this web version swaps in landmark features so it can run on any device without a server.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Recognises the 26 ASL fingerspelling letters (J and Z by motion) plus a space gesture. It is a learning and demonstration tool, not a replacement for a human interpreter.</p>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
